@@ -6,6 +6,7 @@ dependencies:
   - pytorch
   - torchvision
   - torchaudio
+  - torchsummary
   - cudatoolkit=11.3
   - numpy
   - pandas
@@ -16,6 +17,7 @@ dependencies:
   - pip
   - pip:
     - pyautogui
+    - torchsummary
     - pyYAML
     - requests
     - scipy

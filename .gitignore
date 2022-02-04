@@ -3,3 +3,7 @@
 *.iml
 *.xml
 .idea/.name
+.ipynb_checkpoints/testing_env-checkpoint.ipynb
+testing_env.ipynb
+*.pyc
+*.tar
