@@ -7,3 +7,6 @@
 testing_env.ipynb
 *.pyc
 *.tar
+*.png
+*.txt
+*.csv
