@@ -1,4 +1,8 @@
 """
+This file is taken from Aladdin Persson's implementation of YOLO V1 for use on the Pascal VOC dataset.
+
+ref: https://github.com/aladdinpersson/Machine-Learning-Collection/tree/master/ML/Pytorch/object_detection/YOLO
+
 Creates a Pytorch dataset to load the Pascal VOC dataset
 """
 
@@ -10,7 +14,7 @@ from PIL import Image
 
 class VOCDataset(torch.utils.data.Dataset):
     def __init__(
-            self, csv_file, img_dir, label_dir, S=7, B=2, C=1, transform=None,
+            self, csv_file, img_dir, label_dir, S=7, B=2, C=20, transform=None,
     ):
         self.annotations = pd.read_csv(csv_file)
         self.img_dir = img_dir
@@ -73,16 +77,16 @@ class VOCDataset(torch.utils.data.Dataset):
             # If no object already found for specific cell i,j
             # Note: This means we restrict to ONE object
             # per cell!
-            if label_matrix[i, j, 0] == 0:
+            if label_matrix[i, j, 20] == 0:
                 # Set that there exists an object
-                label_matrix[i, j, 0] = 1
+                label_matrix[i, j, 20] = 1
 
                 # Box coordinates
                 box_coordinates = torch.tensor(
                     [x_cell, y_cell, width_cell, height_cell]
                 )
 
-                label_matrix[i, j, 1:5] = box_coordinates
+                label_matrix[i, j, 21:25] = box_coordinates
 
                 # Set one hot encoding for class_label
                 label_matrix[i, j, class_label] = 1

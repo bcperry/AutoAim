@@ -1,3 +1,10 @@
+"""
+This file is modified from Aladdin Persson's implementation of YOLO V1 for use on the Pascal VOC dataset.
+
+ref: https://github.com/aladdinpersson/Machine-Learning-Collection/tree/master/ML/Pytorch/object_detection/YOLO
+"""
+
+import math
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
@@ -6,10 +13,15 @@ from collections import Counter
 import os
 import random
 
+'''
+THE FOLLOWING METHODS WERE CREATED BY THE TEAM FOR INTRO TO AI 95-891
+'''
+
 
 def gen_data_csv(image_directory, label_directory, test_size=10):
-    '''
-    file creates the needed .csv files to load data to be used in yolo v1
+    """
+    This method creates the needed .csv files to load both train and test data to be used in Yolo v1
+
     Args:
         image_directory: (string) location of image files
         label_directory: (string) location of text files
@@ -17,7 +29,7 @@ def gen_data_csv(image_directory, label_directory, test_size=10):
 
     Returns:
         NONE
-    '''
+    """
     image_dir = os.listdir(image_directory)
     label_dir = os.listdir(label_directory)
     data_dict = {};
@@ -55,6 +67,110 @@ def gen_data_csv(image_directory, label_directory, test_size=10):
     with open('test.csv', 'w') as f:
         for key in test_data.keys():
             f.write("%s,%s\n" % (key, test_data[key]))
+
+
+def pick_targets(image, boxes):
+    """
+    This method takes an image and predicted bounding boxes and determines the order in which to prosecute targets
+    the targets closest to the center of the screen will be prosecuted first to avoid snapping the player's cursor
+    around unnecessarily.
+
+    Args:
+        :param image: the image to be analyzed
+        :param boxes: (list of lists) a list containing the coordinates of any predicted bounding box in the image of
+                the format [x, y, w, h]
+
+    Returns:
+        :return primary_target (list of list) a list containing the coordinates of the primary target in the format
+                [x_cor, y_cor]
+        :return secondary_target (list of lists) a list containing the coordinates of any secondary target(s) in the
+                format [x_cor, y_cor]
+    """
+
+    primary_target = []
+    secondary_target = []
+
+    im = np.array(image)
+    height, width, _ = im.shape
+
+    center_x = width/2
+    center_y = height/2
+
+    # box[0] is x midpoint, box[2] is width
+    # box[1] is y midpoint, box[3] is height
+    potential_targets = {}
+    for box in boxes:
+        box = box[2:]
+        assert len(box) == 4, "Got more values than in x, y, w, h, in a box!"
+        box_x = box[0]*width
+        box_y = box[1]*height
+        box_dist = math.sqrt((center_x-box_x)**2+(center_y-box_y)**2)
+        potential_targets[box_dist] = [box_x, box_y]
+
+    keylist = list(potential_targets.keys())
+    if len(keylist) == 1:
+        primary_target.append(potential_targets[keylist[0]])
+    else:
+        keylist.sort()
+        prim_index = keylist.pop(0)
+        primary_target.append(potential_targets[prim_index])
+        for key in keylist:
+            secondary_target.append(potential_targets[key])
+
+    return primary_target,  secondary_target
+
+
+def plot_targets(image, primary_target, secondary_target):
+    """
+    This method takes the list of primary and secondary targets and plots a circle around the point of aim.
+
+    Args:
+    :param image: the image to be analyzed
+    :param primary_target (list of list) a list containing the coordinates of the primary target in the format
+            [x_cor, y_cor]
+    :param secondary_target (list of lists) a list containing the coordinates of any secondary target(s) in the
+            format [x_cor, y_cor]
+
+    Returns:
+        NONE
+    """
+
+    im = np.array(image)
+    height, width, _ = im.shape
+
+    # Create figure and axes
+    fig, ax = plt.subplots(1)
+    # Display the image
+    ax.imshow(im)
+
+    # plot the primary target
+    cir = patches.Circle((primary_target[0][0],
+                          primary_target[0][1]),
+                          2.5,
+                          edgecolor="r",
+                          facecolor="none",
+    )
+    # Add the patch to the Axes
+    ax.add_patch(cir)
+
+    # plot the secondary targets
+    if secondary_target:
+        for tgt in secondary_target:
+            cir = patches.Circle((tgt[0],
+                                  tgt[1]),
+                                  2.5,
+                                  edgecolor="y",
+                                  facecolor="none",
+            )
+            # Add the patch to the Axes
+            ax.add_patch(cir)
+
+    plt.show()
+
+
+'''
+THE FOLLOWING METHODS WERE TAKEN FROM ALADDIN PERSSON'S IMPLEMENTATION OF YOLO V1
+'''
 
 
 def intersection_over_union(boxes_preds, boxes_labels, box_format="midpoint"):
@@ -146,7 +262,7 @@ def non_max_suppression(bboxes, iou_threshold, threshold, box_format="corners"):
 
 
 def mean_average_precision(
-        pred_boxes, true_boxes, iou_threshold=0.5, box_format="midpoint", num_classes=1
+        pred_boxes, true_boxes, iou_threshold=0.5, box_format="midpoint", num_classes=20
 ):
     """
     Calculates mean average precision
@@ -250,7 +366,7 @@ def mean_average_precision(
         # torch.trapz for numerical integration
         average_precisions.append(torch.trapz(precisions, recalls))
 
-    return sum(average_precisions) / (len(average_precisions) + 1e-6)
+    return sum(average_precisions) / len(average_precisions)
 
 
 def plot_image(image, boxes):
@@ -266,7 +382,7 @@ def plot_image(image, boxes):
     # box[0] is x midpoint, box[2] is width
     # box[1] is y midpoint, box[3] is height
 
-    # Create a Rectangle potch
+    # Create a Rectangle patch
     for box in boxes:
         box = box[2:]
         assert len(box) == 4, "Got more values than in x, y, w, h, in a box!"
@@ -280,6 +396,7 @@ def plot_image(image, boxes):
             edgecolor="r",
             facecolor="none",
         )
+
         # Add the patch to the Axes
         ax.add_patch(rect)
 
@@ -352,11 +469,11 @@ def convert_cellboxes(predictions, S=7):
 
     predictions = predictions.to("cpu")
     batch_size = predictions.shape[0]
-    predictions = predictions.reshape(batch_size, 7, 7, 11)
-    bboxes1 = predictions[..., 1:5]
-    bboxes2 = predictions[..., 6:10]
+    predictions = predictions.reshape(batch_size, 7, 7, 30)
+    bboxes1 = predictions[..., 21:25]
+    bboxes2 = predictions[..., 26:30]
     scores = torch.cat(
-        (predictions[..., 0].unsqueeze(0), predictions[..., 5].unsqueeze(0)), dim=0
+        (predictions[..., 20].unsqueeze(0), predictions[..., 25].unsqueeze(0)), dim=0
     )
     best_box = scores.argmax(0).unsqueeze(-1)
     best_boxes = bboxes1 * (1 - best_box) + best_box * bboxes2
@@ -365,8 +482,8 @@ def convert_cellboxes(predictions, S=7):
     y = 1 / S * (best_boxes[..., 1:2] + cell_indices.permute(0, 2, 1, 3))
     w_y = 1 / S * best_boxes[..., 2:4]
     converted_bboxes = torch.cat((x, y, w_y), dim=-1)
-    predicted_class = predictions[..., 0].unsqueeze(-1)
-    best_confidence = torch.max(predictions[..., 1], predictions[..., 5]).unsqueeze(
+    predicted_class = predictions[..., :20].argmax(-1).unsqueeze(-1)
+    best_confidence = torch.max(predictions[..., 20], predictions[..., 25]).unsqueeze(
         -1
     )
     converted_preds = torch.cat(

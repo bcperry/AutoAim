@@ -1,24 +1,20 @@
 """
-Main file for training Yolo model on Pascal VOC dataset
+This file is modified from Aladdin Persson's implementation of YOLO V1 for use on the Pascal VOC dataset.
 
+ref: https://github.com/aladdinpersson/Machine-Learning-Collection/tree/master/ML/Pytorch/object_detection/YOLO
 """
 
 import torch
 import torchvision.transforms as transforms
 import torch.optim as optim
-import torchvision.transforms.functional as FT
 from tqdm import tqdm
 from torch.utils.data import DataLoader
 from model import Yolov1
 from dataset import VOCDataset
 from utils import (
     gen_data_csv,
-    non_max_suppression,
     mean_average_precision,
-    intersection_over_union,
-    cellboxes_to_boxes,
     get_bboxes,
-    plot_image,
     save_checkpoint,
     load_checkpoint,
 )
@@ -28,14 +24,17 @@ seed = 123
 torch.manual_seed(seed)
 
 # Hyperparameters etc.
-LEARNING_RATE = 2e-5
+LEARNING_RATE = 2e-9
 DEVICE = "cuda" if torch.cuda.is_available else "cpu"
-BATCH_SIZE = 5 # 64 in original paper but I don't have that much vram, grad accum?
+BATCH_SIZE = 5
 WEIGHT_DECAY = 0
-EPOCHS = 100
+EPOCHS = 50
 NUM_WORKERS = 2
 PIN_MEMORY = True
-LOAD_MODEL = False
+
+# IF LOAD_MODEL IS SET TO FALSE IT WILL OVERWRITE PREVIOUS WEIGHTS
+LOAD_MODEL = True # true continues training from previous wieghts file, False initializes training with random weights
+
 LOAD_MODEL_FILE = "halo_model.pth.tar"
 IMG_DIR = "halo_data"
 LABEL_DIR = "halo_data/labels"
@@ -75,7 +74,7 @@ def train_fn(train_loader, model, optimizer, loss_fn):
 
 
 def main():
-    model = Yolov1(split_size=7, num_boxes=2, num_classes=1).to(DEVICE)
+    model = Yolov1(split_size=7, num_boxes=2, num_classes=20).to(DEVICE)
     optimizer = optim.Adam(
         model.parameters(), lr=LEARNING_RATE, weight_decay=WEIGHT_DECAY
     )
@@ -93,10 +92,6 @@ def main():
         label_dir=LABEL_DIR,
     )
 
-    test_dataset = VOCDataset(
-        "test.csv", transform=transform, img_dir=IMG_DIR, label_dir=LABEL_DIR,
-    )
-
     train_loader = DataLoader(
         dataset=train_dataset,
         batch_size=BATCH_SIZE,
@@ -106,25 +101,10 @@ def main():
         drop_last=True,
     )
 
-    test_loader = DataLoader(
-        dataset=test_dataset,
-        batch_size=BATCH_SIZE,
-        num_workers=NUM_WORKERS,
-        pin_memory=PIN_MEMORY,
-        shuffle=True,
-        drop_last=False,
-    )
-
+    # this is the starting MAP, any model that gets a better MAP than this will be saved over the current weights file
+    best_map = 0.5
     for epoch in range(EPOCHS):
-        # for x, y in train_loader:
-        #    x = x.to(DEVICE)
-        #    for idx in range(8):
-        #        bboxes = cellboxes_to_boxes(model(x))
-        #        bboxes = non_max_suppression(bboxes[idx], iou_threshold=0.5, threshold=0.4, box_format="midpoint")
-        #        plot_image(x[idx].permute(1,2,0).to("cpu"), bboxes)
-
-        #    import sys
-        #    sys.exit()
+        print(f"Epoch: {epoch}")
 
         pred_boxes, target_boxes = get_bboxes(
             train_loader, model, iou_threshold=0.5, threshold=0.4
@@ -135,14 +115,13 @@ def main():
         )
         print(f"Train mAP: {mean_avg_prec}")
 
-        if mean_avg_prec > 0.9:
+        if mean_avg_prec > best_map:
+            best_map = mean_avg_prec
             checkpoint = {
                 "state_dict": model.state_dict(),
                 "optimizer": optimizer.state_dict(),
             }
             save_checkpoint(checkpoint, filename=LOAD_MODEL_FILE)
-            import time
-            time.sleep(10)
 
         train_fn(train_loader, model, optimizer, loss_fn)
 
