@@ -59,7 +59,7 @@ def get_args_parser(add_help=True):
 
     parser.add_argument("--data-path", default="/datasets01/COCO/022719/", type=str, help="dataset path")
     parser.add_argument("--dataset", default="coco", type=str, help="dataset name")
-    parser.add_argument("--model", default="maskrcnn_resnet50_fpn", type=str, help="model name")
+    parser.add_argument("--YOLOmodel", default="maskrcnn_resnet50_fpn", type=str, help="YOLOmodel name")
     parser.add_argument("--device", default="cuda", type=str, help="device (Use cuda or cpu Default: cuda)")
     parser.add_argument(
         "-b", "--batch-size", default=2, type=int, help="images per gpu, the total batch size is $NGPU x batch_size"
@@ -128,7 +128,7 @@ def get_args_parser(add_help=True):
     parser.add_argument(
         "--test-only",
         dest="test_only",
-        help="Only test the model",
+        help="Only test the YOLOmodel",
         action="store_true",
     )
 
@@ -181,7 +181,7 @@ def main(args):
         dataset_test, batch_size=1, sampler=test_sampler, num_workers=args.workers, collate_fn=utils.collate_fn
     )
 
-    print("Creating model")
+    print("Creating YOLOmodel")
     kwargs = {"trainable_backbone_layers": args.trainable_backbone_layers}
     if args.data_augmentation in ["multiscale", "lsj"]:
         kwargs["_skip_resize"] = True
@@ -235,7 +235,7 @@ def main(args):
 
     if args.resume:
         checkpoint = torch.load(args.resume, map_location="cpu")
-        model_without_ddp.load_state_dict(checkpoint["model"])
+        model_without_ddp.load_state_dict(checkpoint["YOLOmodel"])
         optimizer.load_state_dict(checkpoint["optimizer"])
         lr_scheduler.load_state_dict(checkpoint["lr_scheduler"])
         args.start_epoch = checkpoint["epoch"] + 1
@@ -255,7 +255,7 @@ def main(args):
         lr_scheduler.step()
         if args.output_dir:
             checkpoint = {
-                "model": model_without_ddp.state_dict(),
+                "YOLOmodel": model_without_ddp.state_dict(),
                 "optimizer": optimizer.state_dict(),
                 "lr_scheduler": lr_scheduler.state_dict(),
                 "args": args,

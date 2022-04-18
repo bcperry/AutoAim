@@ -27,6 +27,5 @@ dependencies:
     - albumentations
     - opencv-python
     - ipykernel
-    - autopy
     - fiftyone
     - "git+https://github.com/bcperry/cocoapi_windows.git#subdirectory=PythonAPI"

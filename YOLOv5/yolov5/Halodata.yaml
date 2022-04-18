@@ -1,0 +1,5 @@
+names:
+- enemy
+nc: 1
+train: Halo-2/train/images
+val: Halo-2/valid/images

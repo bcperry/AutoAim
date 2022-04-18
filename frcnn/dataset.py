@@ -102,7 +102,7 @@ def get_transforms(train):
     if train:
         transform = A.Compose([A.HorizontalFlip(0.5), ToTensorV2(p=1.0) ], bbox_params={'format': 'pascal_voc', 'label_fields': ['labels']})
     else:
-        transform = A.Compose([ToTensorV2(p=1.0)])
+        transform = A.Compose([ToTensorV2(p=1.0)], bbox_params={'format': 'pascal_voc', 'label_fields': ['labels']})
     return transform
 
 def collate_fn(batch):

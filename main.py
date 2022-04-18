@@ -5,13 +5,13 @@ model = torch.hub.load('ultralytics/yolov5', 'yolov5s', autoshape=False, classes
 print(model.se)
 
 '''
-model = torch.hub.load('ultralytics/yolov5', 'yolov5s', autoshape=False, classes=1)
+YOLOmodel = torch.hub.load('ultralytics/yolov5', 'yolov5s', autoshape=False, classes=1)
 
 # Image
 img = 'https://ultralytics.com/images/zidane.jpg'
 
 # Inference
-results = model(img)
+results = YOLOmodel(img)
 
 results.show()
 '''
