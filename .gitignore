@@ -10,4 +10,5 @@ testing_env.ipynb
 *.png
 *.txt
 *.csv
+venv/
 frcnn/FRCNN_halo_FRCNN_model.pth

@@ -32,3 +32,14 @@ higher precision and recall than single stage models, but is slower in doing so.
 YOLOv5 is the latest version in the YOLO model family. It is also a single stage
 detector, but is capable of higher precision and recall than YOLOv1, while at the
 same time maintaining its ability to perform very fast inference.
+
+
+# Auto Aim for Halo Infinite using YOLOv5
+---
+## Blaine Perry
+---
+# to run model using Docker
+# build the container
+docker build -t autoaim .
+# run the container, attaching the local directory to the user folder in the container
+docker run --rm -d -itp 8888:8888 -v %cd%:/app --gpus all autoaim
