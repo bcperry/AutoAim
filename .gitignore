@@ -8,7 +8,6 @@ testing_env.ipynb
 *.pyc
 *.tar
 *.png
-*.txt
 *.csv
 venv/
 frcnn/FRCNN_halo_FRCNN_model.pth

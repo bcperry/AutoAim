@@ -1,0 +1,11 @@
+--extra-index-url https://download.pytorch.org/whl/cu118
+jupyterlab
+torch
+torchvision
+torchaudio
+transformers[torch]
+Pillow
+simple-pid
+pywin32
+mss
+keyboard
