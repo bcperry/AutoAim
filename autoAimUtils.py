@@ -22,7 +22,7 @@ def render(image: Image, predictions: list, labels: list) -> Image:
 
     draw = PIL.ImageDraw.Draw(image)
 
-    for bbox in predictions.cpu().numpy():
+    for bbox in predictions:
         box = [round(i, 2) for i in bbox[:4]]
         draw.rectangle(box, fill=None)
         draw.text(bbox[:2], labels[bbox[-1]])
