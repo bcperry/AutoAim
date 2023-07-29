@@ -6,6 +6,11 @@ torchaudio
 transformers[torch]
 Pillow
 simple-pid
+pandas
 pywin32
 mss
 keyboard
+opencv-python
+matplotlib
+seaborn
+scipy
