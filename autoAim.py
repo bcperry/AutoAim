@@ -13,7 +13,7 @@ from autoAimUtils import getScreenInfo
 DEVICE = "cuda:0" if torch.cuda.is_available() else "cpu"
 
 # Model
-model = torch.hub.load('ultralytics/yolov5', 'yolov5s', pretrained=True, verbose=False, )
+model = torch.hub.load('ultralytics/yolov5', 'yolov5l6', pretrained=True, verbose=False, )
 model.to(DEVICE)
 model.eval()
 
